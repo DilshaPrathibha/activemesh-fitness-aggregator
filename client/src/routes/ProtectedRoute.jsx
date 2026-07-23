@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getRoleHome } from '../utils/auth';
 
 export default function ProtectedRoute({ allowedRoles = [] }) {
   const { user, loading } = useAuth();
@@ -15,8 +16,10 @@ export default function ProtectedRoute({ allowedRoles = [] }) {
   if (!user) return <Navigate to="/login" replace />;
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/dashboard" replace />;
+    // Redirect to the user's correct home to avoid cross-role redirect loops
+    return <Navigate to={getRoleHome(user.role)} replace />;
   }
 
   return <Outlet />;
 }
+

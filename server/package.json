@@ -5,7 +5,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "dev": "node --watch server.js",
+    "dev": "node --max-old-space-size=512 --env-file=.env --watch server.js",
     "start": "node server.js",
     "seed": "node src/utils/seed.js"
   },

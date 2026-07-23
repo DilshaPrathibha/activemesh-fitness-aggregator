@@ -1,3 +1,4 @@
+// Env vars are loaded via --env-file=.env flag in package.json (Node v20+ built-in)
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -9,6 +10,7 @@ import { notFound, errorHandler } from './src/middleware/errorMiddleware.js';
 // Route imports (added progressively each phase)
 import authRoutes from './src/routes/authRoutes.js';
 import gymRoutes from './src/routes/gymRoutes.js';
+import classRoutes from './src/routes/classRoutes.js';
 import checkInRoutes from './src/routes/checkInRoutes.js';
 import qrRoutes from './src/routes/qrRoutes.js';
 import planRoutes from './src/routes/planRoutes.js';
@@ -26,8 +28,23 @@ connectDB();
 
 // Core middleware
 app.use(helmet());
+// Allowed CORS origins: CLIENT_URL from env + localhost for dev + *.vercel.app previews
+const ALLOWED_ORIGINS = [
+  process.env.CLIENT_URL,
+  'http://localhost:5173',
+  'http://localhost:4173', // vite preview
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (curl, Postman, mobile apps)
+    if (!origin) return callback(null, true);
+    // Allow any *.vercel.app subdomain (covers preview deploys)
+    if (origin.endsWith('.vercel.app') || ALLOWED_ORIGINS.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error(`CORS: origin '${origin}' not allowed`));
+  },
   credentials: true,
 }));
 app.use(morgan('dev'));
@@ -43,6 +60,7 @@ app.get('/api/health', (_req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/gyms', gymRoutes);
+app.use('/api/classes', classRoutes);
 app.use('/api/checkin', checkInRoutes);
 app.use('/api/qr', qrRoutes);
 app.use('/api/plans', planRoutes);

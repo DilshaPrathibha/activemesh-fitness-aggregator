@@ -53,11 +53,15 @@ export default function App() {
             <Route path="/gyms" element={<GymSearchPage />} />
             <Route path="/gyms/:id" element={<GymDetailPage />} />
 
-            {/* Protected user routes */}
-            <Route element={<ProtectedRoute allowedRoles={['user', 'gym_owner', 'admin']} />}>
+            {/* Protected user-only routes — members only */}
+            <Route element={<ProtectedRoute allowedRoles={['user']} />}>
               <Route path="/dashboard" element={<UserDashboardPage />} />
               <Route path="/memberships" element={<MembershipPlansPage />} />
               <Route path="/bookings" element={<MyBookingsPage />} />
+            </Route>
+
+            {/* Profile — accessible to any authenticated user */}
+            <Route element={<ProtectedRoute allowedRoles={['user', 'gym_owner', 'admin']} />}>
               <Route path="/profile" element={<ProfilePage />} />
             </Route>
 

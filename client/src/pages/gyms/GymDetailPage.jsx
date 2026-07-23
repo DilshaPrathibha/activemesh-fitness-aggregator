@@ -137,7 +137,7 @@ export default function GymDetailPage() {
             </div>
             <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm rounded-xl px-3 py-1.5">
               <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-              <span className="font-semibold">{gym.rating.toFixed(1)}</span>
+              <span className="font-semibold">{gym.rating != null ? gym.rating.toFixed(1) : '—'}</span>
               <span className="text-white/70 text-xs">({gym.reviewCount})</span>
             </div>
           </div>
@@ -184,7 +184,7 @@ export default function GymDetailPage() {
               <div className="card p-6">
                 <h2 className="font-semibold mb-4 flex items-center gap-2"><Clock className="w-4 h-4 text-violet-600" /> Opening Hours</h2>
                 <div className="space-y-2">
-                  {gym.openingHours && Object.entries(Object.fromEntries(gym.openingHours)).map(([day, hours]) => (
+                  {gym.openingHours && Object.entries(gym.openingHours).map(([day, hours]) => (
                     <div key={day} className="flex justify-between text-sm">
                       <span className="capitalize text-[rgb(var(--color-muted))]">{day}</span>
                       <span className="font-medium">{hours}</span>
@@ -243,7 +243,9 @@ export default function GymDetailPage() {
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
-                  src={`https://www.google.com/maps/embed/v1/place?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}&q=${encodeURIComponent(`${gym.name}, ${gym.address}, ${gym.city}`)}`}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(`${gym.name}, ${gym.address}, ${gym.city}, ${gym.state} ${gym.postcode}, Australia`)}&output=embed&iwloc=&z=15`}
                   allowFullScreen
                 />
               </div>

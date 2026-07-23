@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Dumbbell, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { getRoleHome } from '../../utils/auth';
 import toast from 'react-hot-toast';
 
 export default function RegisterPage() {
@@ -23,9 +24,9 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
-      await register({ name: form.name, email: form.email, password: form.password, role: form.role });
+      const result = await register({ name: form.name, email: form.email, password: form.password, role: form.role });
       toast.success('Account created! Welcome to ActiveMesh.');
-      navigate('/dashboard');
+      navigate(getRoleHome(result.user.role));
     } catch (err) {
       const msg = err.response?.data?.message || 'Registration failed. Please try again.';
       toast.error(msg);

@@ -13,7 +13,6 @@ export default function QRPassModal({ gymId, gymName, onClose }) {
   const [loading, setLoading] = useState(true);
   const [expired, setExpired] = useState(false);
   const intervalRef = useRef(null);
-  const canvasRef = useRef(null);
 
   const generatePass = async () => {
     setLoading(true);
@@ -23,10 +22,10 @@ export default function QRPassModal({ gymId, gymName, onClose }) {
       const { data } = await api.post('/qr/generate', { gymId });
       setQrData(data.data);
 
-      // Generate QR code image from token
+      // Larger width + margin:1 so all QR modules render without clipping
       const url = await QRCode.toDataURL(data.data.token, {
-        width: 220,
-        margin: 2,
+        width: 240,
+        margin: 1,
         color: { dark: '#4c1d95', light: '#ffffff' },
       });
       setQrImageUrl(url);
@@ -58,10 +57,7 @@ export default function QRPassModal({ gymId, gymName, onClose }) {
   useEffect(() => { generatePass(); }, []);
 
   const progress = (secondsLeft / QR_TTL) * 100;
-  const circleSize = 180;
-  const radius = 80;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
+  const urgency = secondsLeft <= 10;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
@@ -93,33 +89,26 @@ export default function QRPassModal({ gymId, gymName, onClose }) {
           </div>
         ) : (
           <div className="flex flex-col items-center">
-            {/* Circular countdown + QR */}
-            <div className="relative mb-4" style={{ width: circleSize, height: circleSize }}>
-              <svg className="absolute inset-0 -rotate-90" width={circleSize} height={circleSize}>
-                <circle cx={circleSize / 2} cy={circleSize / 2} r={radius} fill="none" stroke="currentColor" className="text-gray-200 dark:text-slate-600" strokeWidth="8" />
-                <circle
-                  cx={circleSize / 2}
-                  cy={circleSize / 2}
-                  r={radius}
-                  fill="none"
-                  stroke="#7c3aed"
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                  style={{ transition: 'stroke-dashoffset 1s linear' }}
-                />
-              </svg>
-              {qrImageUrl && (
-                <div className="absolute inset-3 rounded-full overflow-hidden flex items-center justify-center bg-white">
-                  <img src={qrImageUrl} alt="QR Pass" className="w-full h-full object-contain p-1" />
-                </div>
-              )}
-            </div>
+            {/* QR code — full square display, no circular clipping */}
+            {qrImageUrl && (
+              <div className="rounded-2xl border-4 border-violet-600 bg-white p-2 mb-4">
+                <img src={qrImageUrl} alt="QR Pass" className="w-56 h-56 block" />
+              </div>
+            )}
 
-            <div className={`text-3xl font-bold tabular-nums mb-1 ${secondsLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-violet-600'}`}>
+            {/* Countdown number */}
+            <div className={`text-3xl font-bold tabular-nums mb-2 ${urgency ? 'text-red-500 animate-pulse' : 'text-violet-600'}`}>
               {secondsLeft}s
             </div>
+
+            {/* Linear progress bar replaces the circular ring */}
+            <div className="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-2 mb-4 overflow-hidden">
+              <div
+                className={`h-2 rounded-full transition-all duration-1000 ease-linear ${urgency ? 'bg-red-500' : 'bg-violet-600'}`}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+
             <p className="text-xs text-[rgb(var(--color-muted))] mb-4">Show this QR code to the gym staff</p>
 
             <div className="w-full bg-violet-50 dark:bg-violet-900/20 rounded-lg p-3 text-xs text-center text-violet-700 dark:text-violet-300">

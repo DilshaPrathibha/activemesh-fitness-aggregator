@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Users, Dumbbell, TrendingUp, CheckCircle, Calendar,
   Search, ChevronLeft, ChevronRight, ShieldCheck, ShieldOff,
-  BarChart3, Clock, UserCheck, UserX,
+  BarChart3, Clock, UserCheck, UserX, Plus, X, UserCog,
 } from 'lucide-react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
@@ -111,6 +111,175 @@ function Tab({ active, onClick, children }) {
   );
 }
 
+// ─── Register Gym Modal ───────────────────────────────────────────────────────
+const AU_STATES = ['NSW','VIC','QLD','WA','SA','TAS','ACT','NT'];
+const EMPTY_GYM = { name:'', address:'', suburb:'', city:'', state:'NSW', postcode:'', phone:'', website:'', description:'', ownerId:'' };
+
+function RegisterGymModal({ onClose, onCreated }) {
+  const [form, setForm] = useState(EMPTY_GYM);
+  const [owners, setOwners] = useState([]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    // Load gym_owner users for the dropdown
+    api.get('/admin/users?role=gym_owner&limit=50')
+      .then(r => setOwners(r.data.data.users))
+      .catch(() => toast.error('Could not load owners'));
+  }, []);
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.ownerId) return toast.error('Please select an owner');
+    setSaving(true);
+    try {
+      const { data } = await api.post('/admin/gyms', form);
+      toast.success(data.message);
+      onCreated();
+      onClose();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not create gym');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="card p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto relative" onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-4 right-4 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
+          <X className="w-5 h-5" />
+        </button>
+        <h2 className="text-lg font-bold mb-1">Register New Gym</h2>
+        <p className="text-sm text-[rgb(var(--color-muted))] mb-5">Gym will be auto-verified and assigned to the selected owner.</p>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="label">Gym Name *</label>
+            <input className="input" required value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. FitHub Sydney" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Address *</label>
+              <input className="input" required value={form.address} onChange={e => set('address', e.target.value)} placeholder="123 Main St" />
+            </div>
+            <div>
+              <label className="label">Suburb</label>
+              <input className="input" value={form.suburb} onChange={e => set('suburb', e.target.value)} placeholder="Surry Hills" />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="label">City *</label>
+              <input className="input" required value={form.city} onChange={e => set('city', e.target.value)} placeholder="Sydney" />
+            </div>
+            <div>
+              <label className="label">State *</label>
+              <select className="input" value={form.state} onChange={e => set('state', e.target.value)}>
+                {AU_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">Postcode *</label>
+              <input className="input" required value={form.postcode} onChange={e => set('postcode', e.target.value)} placeholder="2010" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Phone</label>
+              <input className="input" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="02 9000 0000" />
+            </div>
+            <div>
+              <label className="label">Website</label>
+              <input className="input" value={form.website} onChange={e => set('website', e.target.value)} placeholder="https://..." />
+            </div>
+          </div>
+          <div>
+            <label className="label">Description</label>
+            <textarea className="input" rows={2} value={form.description} onChange={e => set('description', e.target.value)} placeholder="Brief description of the gym..." />
+          </div>
+          <div>
+            <label className="label">Assign Owner * <span className="text-[rgb(var(--color-muted))] font-normal">(must have Gym Owner role)</span></label>
+            <select className="input" required value={form.ownerId} onChange={e => set('ownerId', e.target.value)}>
+              <option value="">— Select an owner —</option>
+              {owners.map(o => (
+                <option key={o._id} value={o._id}>{o.name} ({o.email})</option>
+              ))}
+            </select>
+            {owners.length === 0 && (
+              <p className="text-xs text-amber-600 mt-1">⚠ No gym_owner accounts found. Create one first via Users tab (change role to Gym Owner).</p>
+            )}
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
+            <button type="submit" disabled={saving} className="btn-primary flex-1">
+              {saving ? 'Creating…' : 'Register Gym'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Assign Owner Modal ───────────────────────────────────────────────────────
+function AssignOwnerModal({ gym, onClose, onUpdated }) {
+  const [owners, setOwners] = useState([]);
+  const [ownerId, setOwnerId] = useState(gym.owner?._id || '');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    api.get('/admin/users?role=gym_owner&limit=50')
+      .then(r => setOwners(r.data.data.users))
+      .catch(() => toast.error('Could not load owners'));
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const { data } = await api.patch(`/admin/gyms/${gym._id}/owner`, { ownerId });
+      toast.success(data.message);
+      onUpdated();
+      onClose();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not update owner');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="card p-6 w-full max-w-sm relative" onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-4 right-4 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
+          <X className="w-5 h-5" />
+        </button>
+        <h2 className="text-lg font-bold mb-1">Assign Owner</h2>
+        <p className="text-sm text-[rgb(var(--color-muted))] mb-5">{gym.name}</p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="label">Select Owner *</label>
+            <select className="input" required value={ownerId} onChange={e => setOwnerId(e.target.value)}>
+              <option value="">— Select an owner —</option>
+              {owners.map(o => (
+                <option key={o._id} value={o._id}>{o.name} ({o.email})</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex gap-3">
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
+            <button type="submit" disabled={saving || !ownerId} className="btn-primary flex-1">
+              {saving ? 'Saving…' : 'Assign Owner'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState('stats');
@@ -133,6 +302,10 @@ export default function AdminDashboardPage() {
   const [gymsPages, setGymsPages] = useState(1);
   const [gymsFilter, setGymsFilter] = useState('');
   const [gymsLoading, setGymsLoading] = useState(false);
+
+  // Modal state
+  const [showRegisterGym, setShowRegisterGym] = useState(false);
+  const [assignOwnerGym, setAssignOwnerGym] = useState(null); // gym object to assign
 
   // ── Fetch stats ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -440,7 +613,7 @@ export default function AdminDashboardPage() {
       {/* ── GYMS TAB ──────────────────────────────────────────────────────── */}
       {activeTab === 'gyms' && (
         <div className="card overflow-hidden">
-          {/* Filters */}
+          {/* Filters + Register button */}
           <div className="p-4 border-b border-[rgb(var(--color-border))] flex flex-wrap gap-3 items-center">
             <div className="flex gap-2">
               {[
@@ -461,9 +634,13 @@ export default function AdminDashboardPage() {
                 </button>
               ))}
             </div>
-            <span className="ml-auto text-xs text-[rgb(var(--color-muted))]">
-              {gymsTotal} gyms
-            </span>
+            <span className="text-xs text-[rgb(var(--color-muted))]">{gymsTotal} gyms</span>
+            <button
+              onClick={() => setShowRegisterGym(true)}
+              className="ml-auto btn-primary text-xs py-1.5 px-3"
+            >
+              <Plus className="w-3.5 h-3.5" /> Register Gym
+            </button>
           </div>
 
           {/* Table */}
@@ -537,20 +714,24 @@ export default function AdminDashboardPage() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {!gym.isVerified && (
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
-                            onClick={() => handleApproveGym(gym._id)}
-                            title="Approve gym"
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                            onClick={() => setAssignOwnerGym(gym)}
+                            title="Assign / change owner"
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-[rgb(var(--color-border))] hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
                           >
-                            <ShieldCheck className="w-3.5 h-3.5" /> Approve
+                            <UserCog className="w-3.5 h-3.5" /> Owner
                           </button>
-                        )}
-                        {gym.isVerified && (
-                          <span className="flex items-center gap-1 text-xs text-[rgb(var(--color-muted))]">
-                            <ShieldOff className="w-3.5 h-3.5" />
-                          </span>
-                        )}
+                          {!gym.isVerified && (
+                            <button
+                              onClick={() => handleApproveGym(gym._id)}
+                              title="Approve gym"
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                            >
+                              <ShieldCheck className="w-3.5 h-3.5" /> Approve
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -563,6 +744,21 @@ export default function AdminDashboardPage() {
             <Pagination page={gymsPage} pages={gymsPages} onPage={setGymsPage} />
           </div>
         </div>
+      )}
+
+      {/* Modals */}
+      {showRegisterGym && (
+        <RegisterGymModal
+          onClose={() => setShowRegisterGym(false)}
+          onCreated={() => { fetchGyms(); setActiveTab('gyms'); }}
+        />
+      )}
+      {assignOwnerGym && (
+        <AssignOwnerModal
+          gym={assignOwnerGym}
+          onClose={() => setAssignOwnerGym(null)}
+          onUpdated={fetchGyms}
+        />
       )}
     </div>
   );
