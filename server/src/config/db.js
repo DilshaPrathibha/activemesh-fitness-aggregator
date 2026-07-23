@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-dotenv.config();
+// dotenv is loaded in server.js at startup — no need to call it again here
 
 const connectDB = async () => {
   try {
