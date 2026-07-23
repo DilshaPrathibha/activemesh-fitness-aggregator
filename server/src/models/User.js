@@ -64,12 +64,15 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Hash password before save
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('passwordHash')) return next();
-  this.passwordHash = await bcrypt.hash(this.passwordHash, 10); // 10 is OWASP-compliant; 12 caused OOM crashes
-  next();
+// Hash password before save.
+// NOTE: async pre-save hooks in Mongoose must NOT call next() — Mongoose awaits
+// the returned promise automatically. Calling next() after an await causes
+// "next is not a function" because the callback context is lost across the async boundary.
+userSchema.pre('save', async function () {
+  if (!this.isModified('passwordHash')) return;
+  this.passwordHash = await bcrypt.hash(this.passwordHash, 10);
 });
+
 
 // Compare passwords
 userSchema.methods.matchPassword = async function (password) {

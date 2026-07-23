@@ -18,11 +18,22 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
+// Dispatch a custom event so AuthContext can react without a full page reload.
+// Using window.location.href = '/login' caused an infinite reload loop because
+// each reload re-triggered /auth/me -> 401 -> refresh -> fail -> reload -> repeat.
+const dispatchLogout = () => window.dispatchEvent(new CustomEvent('auth:logout'));
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
+
+    // Don't retry refresh or login endpoints to avoid loops
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/refresh') ||
+                           originalRequest.url?.includes('/auth/login') ||
+                           originalRequest.url?.includes('/auth/me');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -51,7 +62,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         delete api.defaults.headers.common['Authorization'];
-        window.location.href = '/login';
+        dispatchLogout(); // React Router navigate instead of hard reload
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

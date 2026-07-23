@@ -1,4 +1,4 @@
-import 'dotenv/config'; // MUST be first — loads .env before any other module reads process.env
+// Env vars are loaded via --env-file=.env flag in package.json (Node v20+ built-in)
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';

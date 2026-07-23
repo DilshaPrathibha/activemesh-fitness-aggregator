@@ -3,6 +3,13 @@ import api from '../api/axios';
 
 const AuthContext = createContext(null);
 
+// Returns the correct home route for a given role
+export const getRoleHome = (role) => {
+  if (role === 'admin') return '/admin';
+  if (role === 'gym_owner') return '/owner';
+  return '/dashboard';
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,6 +27,18 @@ export function AuthProvider({ children }) {
       }
     };
     initAuth();
+  }, []);
+
+  // Listen for the custom 'auth:logout' event fired by the axios interceptor
+  // when a token refresh fails — clears user state so ProtectedRoute redirects
+  // to /login via React Router (no full page reload, no infinite loop).
+  useEffect(() => {
+    const handleForceLogout = () => {
+      setUser(null);
+      delete api.defaults.headers.common['Authorization'];
+    };
+    window.addEventListener('auth:logout', handleForceLogout);
+    return () => window.removeEventListener('auth:logout', handleForceLogout);
   }, []);
 
   const login = useCallback(async (credentials) => {
@@ -46,7 +65,7 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const value = { user, loading, login, register, logout, setUser };
+  const value = { user, loading, login, register, logout, setUser, getRoleHome };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
@@ -56,3 +75,4 @@ export const useAuth = () => {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 };
+

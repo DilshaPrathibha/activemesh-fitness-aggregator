@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
@@ -8,7 +9,12 @@ import MembershipPlan from '../models/MembershipPlan.js';
 
 dotenv.config();
 
+// Fix: local DNS (127.0.0.1) blocks Atlas SRV lookups — use public DNS
+dns.setServers(['8.8.8.8', '1.1.1.1']);
+dns.setDefaultResultOrder('ipv4first');
+
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/activemesh';
+
 
 const membershipPlans = [
   {
@@ -160,8 +166,9 @@ const classTemplates = [
 ];
 
 async function seed() {
-  await mongoose.connect(MONGO_URI);
+  await mongoose.connect(MONGO_URI, { family: 4, serverSelectionTimeoutMS: 15000 });
   console.log('✅ Connected to MongoDB');
+
 
   // Clear existing data
   await Promise.all([

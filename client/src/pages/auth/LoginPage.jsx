@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Dumbbell, Eye, EyeOff, Loader2 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, getRoleHome } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
@@ -17,9 +17,9 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(form);
+      const result = await login(form);
       toast.success('Welcome back!');
-      navigate('/dashboard');
+      navigate(getRoleHome(result.user.role));
     } catch (err) {
       const msg = err.response?.data?.message || 'Login failed. Please try again.';
       toast.error(msg);

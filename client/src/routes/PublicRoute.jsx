@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, getRoleHome } from '../context/AuthContext';
 
 // Redirect logged-in users away from auth pages
 export default function PublicRoute() {
@@ -13,5 +13,6 @@ export default function PublicRoute() {
     );
   }
 
-  return user ? <Navigate to="/dashboard" replace /> : <Outlet />;
+  return user ? <Navigate to={getRoleHome(user.role)} replace /> : <Outlet />;
 }
+
