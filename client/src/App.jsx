@@ -26,6 +26,7 @@ import ProfilePage from './pages/profile/ProfilePage';
 
 // Owner pages
 import OwnerDashboardPage from './pages/owner/OwnerDashboardPage';
+import QRScannerPage from './pages/gyms/QRScannerPage';
 
 // Admin pages
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -63,6 +64,7 @@ export default function App() {
             {/* Protected owner routes */}
             <Route element={<ProtectedRoute allowedRoles={['gym_owner', 'admin']} />}>
               <Route path="/owner" element={<OwnerDashboardPage />} />
+              <Route path="/scan" element={<QRScannerPage />} />
             </Route>
 
             {/* Protected admin routes */}
