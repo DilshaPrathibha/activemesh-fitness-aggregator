@@ -32,7 +32,7 @@ export default function GymCard({ gym }) {
           <h3 className="font-semibold text-sm leading-tight line-clamp-1">{gym.name}</h3>
           <div className="flex items-center gap-1 shrink-0">
             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-            <span className="text-xs font-medium">{gym.rating.toFixed(1)}</span>
+            <span className="text-xs font-medium">{gym.rating != null ? gym.rating.toFixed(1) : '—'}</span>
           </div>
         </div>
 
