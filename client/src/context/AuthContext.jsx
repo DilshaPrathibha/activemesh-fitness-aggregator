@@ -14,12 +14,19 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch current user on mount (uses httpOnly refresh cookie)
+  // Restore session on every page load:
+  // 1. Call /auth/refresh (sends httpOnly cookie automatically) → get a fresh access token
+  // 2. Set the token on axios defaults so subsequent requests are authenticated
+  // 3. Call /auth/me to get the full user profile
+  // If refresh fails (cookie missing/expired) → user stays null → ProtectedRoute redirects to /login
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const { data } = await api.get('/auth/me');
-        setUser(data.data);
+        const { data: refreshData } = await api.post('/auth/refresh');
+        const accessToken = refreshData.data.accessToken;
+        api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        const { data: meData } = await api.get('/auth/me');
+        setUser(meData.data);
       } catch {
         setUser(null);
       } finally {
@@ -28,6 +35,7 @@ export function AuthProvider({ children }) {
     };
     initAuth();
   }, []);
+
 
   // Listen for the custom 'auth:logout' event fired by the axios interceptor
   // when a token refresh fails — clears user state so ProtectedRoute redirects
