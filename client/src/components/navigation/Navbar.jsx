@@ -1,5 +1,5 @@
 import { Link, NavLink } from 'react-router-dom';
-import { Dumbbell, Moon, Sun, Menu, X, LogOut, User, LayoutDashboard } from 'lucide-react';
+import { Dumbbell, Moon, Sun, Menu, X, LogOut, User, LayoutDashboard, Calendar, ShieldCheck, ScanLine } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -90,13 +90,22 @@ export default function Navbar() {
                     >
                       <User className="w-4 h-4" /> Profile
                     </Link>
-                    {user.role === 'gym_owner' && (
+                    {(user.role === 'gym_owner' || user.role === 'admin') && (
                       <Link
                         to="/owner"
                         className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
                         onClick={() => setProfileOpen(false)}
                       >
                         <Dumbbell className="w-4 h-4" /> Owner Dashboard
+                      </Link>
+                    )}
+                    {(user.role === 'gym_owner' || user.role === 'admin') && (
+                      <Link
+                        to="/scan"
+                        className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                        onClick={() => setProfileOpen(false)}
+                      >
+                        <ScanLine className="w-4 h-4" /> QR Scanner
                       </Link>
                     )}
                     {user.role === 'admin' && (
@@ -152,6 +161,57 @@ export default function Navbar() {
                 {label}
               </NavLink>
             ))}
+            {user && (
+              <>
+                <hr className="my-2 border-[rgb(var(--color-border))]" />
+                <NavLink
+                  to="/dashboard"
+                  className="flex items-center gap-2 px-2 py-2 text-sm font-medium text-[rgb(var(--color-muted))] hover:text-[rgb(var(--color-text))]"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <LayoutDashboard className="w-4 h-4" /> Dashboard
+                </NavLink>
+                <NavLink
+                  to="/bookings"
+                  className="flex items-center gap-2 px-2 py-2 text-sm font-medium text-[rgb(var(--color-muted))] hover:text-[rgb(var(--color-text))]"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <Calendar className="w-4 h-4" /> My Bookings
+                </NavLink>
+                <NavLink
+                  to="/profile"
+                  className="flex items-center gap-2 px-2 py-2 text-sm font-medium text-[rgb(var(--color-muted))] hover:text-[rgb(var(--color-text))]"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <User className="w-4 h-4" /> Profile
+                </NavLink>
+                {(user.role === 'gym_owner' || user.role === 'admin') && (
+                  <NavLink
+                    to="/owner"
+                    className="flex items-center gap-2 px-2 py-2 text-sm font-medium text-[rgb(var(--color-muted))] hover:text-[rgb(var(--color-text))]"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <Dumbbell className="w-4 h-4" /> Owner Dashboard
+                  </NavLink>
+                )}
+                {user.role === 'admin' && (
+                  <NavLink
+                    to="/admin"
+                    className="flex items-center gap-2 px-2 py-2 text-sm font-medium text-[rgb(var(--color-muted))] hover:text-[rgb(var(--color-text))]"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <ShieldCheck className="w-4 h-4" /> Admin Dashboard
+                  </NavLink>
+                )}
+                <hr className="my-2 border-[rgb(var(--color-border))]" />
+                <button
+                  onClick={() => { handleLogout(); setMenuOpen(false); }}
+                  className="w-full flex items-center gap-2 px-2 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" /> Sign out
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
