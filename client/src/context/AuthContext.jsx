@@ -3,13 +3,6 @@ import api from '../api/axios';
 
 const AuthContext = createContext(null);
 
-// Returns the correct home route for a given role
-export const getRoleHome = (role) => {
-  if (role === 'admin') return '/admin';
-  if (role === 'gym_owner') return '/owner';
-  return '/dashboard';
-};
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -73,7 +66,7 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const value = { user, loading, login, register, logout, setUser, getRoleHome };
+  const value = { user, loading, login, register, logout, setUser };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

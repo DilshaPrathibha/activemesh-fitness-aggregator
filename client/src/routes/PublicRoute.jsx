@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth, getRoleHome } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { getRoleHome } from '../utils/auth';
 
 // Redirect logged-in users away from auth pages
 export default function PublicRoute() {

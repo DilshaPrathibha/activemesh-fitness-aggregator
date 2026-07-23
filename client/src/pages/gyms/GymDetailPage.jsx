@@ -243,7 +243,9 @@ export default function GymDetailPage() {
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
-                  src={`https://www.google.com/maps/embed/v1/place?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}&q=${encodeURIComponent(`${gym.name}, ${gym.address}, ${gym.city}`)}`}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(`${gym.name}, ${gym.address}, ${gym.city}, ${gym.state} ${gym.postcode}, Australia`)}&output=embed&iwloc=&z=15`}
                   allowFullScreen
                 />
               </div>

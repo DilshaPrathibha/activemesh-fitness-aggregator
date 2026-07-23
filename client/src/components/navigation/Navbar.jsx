@@ -1,7 +1,8 @@
 import { Link, NavLink } from 'react-router-dom';
 import { Dumbbell, Moon, Sun, Menu, X, LogOut, User, LayoutDashboard, Calendar, ShieldCheck, ScanLine, Store } from 'lucide-react';
 import { useState } from 'react';
-import { useAuth, getRoleHome } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
+import { getRoleHome } from '../../utils/auth';
 import { useTheme } from '../../context/ThemeContext';
 
 // Nav links visible to public (no login required)
