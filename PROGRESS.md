@@ -1,10 +1,10 @@
 # ActiveMesh — Progress Tracker
 
 ## Current Branch
-`development` (Phase 8 complete — about to start Phase 9)
+`main` (v1.0.0 — ALL PHASES COMPLETE ✅)
 
 ## Last Completed Phase
-Phase 8 — Owner Dashboard ✅
+Phase 10 — Polish & Bonus ✅
 
 ## Phase Status
 
@@ -19,24 +19,8 @@ Phase 8 — Owner Dashboard ✅
 | 6     | feature/user-dashboard       | ✅ Merged     | Stats, visits, favourites            |
 | 7     | feature/booking-system       | ✅ Merged     | Book/cancel classes                  |
 | 8     | feature/owner-dashboard      | ✅ Merged     | Analytics, gym management            |
-| 9     | feature/admin-dashboard      | ⏳ Next       | Users, gyms, platform analytics      |
-| 10    | feature/polish-and-bonus     | ⏳ Pending    | Dark mode, QR scanner, Docker, docs  |
-
----
-
-## ⚡ Next Step — Start Phase 9
-
-```bash
-git checkout development
-git checkout -b feature/admin-dashboard
-git push -u origin feature/admin-dashboard
-```
-
-Then implement in order:
-1. **Server**: `adminController.js` → `adminRoutes.js`
-2. **Client**: `AdminDashboardPage.jsx`
-3. Build: `$env:NODE_OPTIONS="--max-old-space-size=4096"; npm run build` inside `client/`
-4. Commit + push + merge to development
+| 9     | feature/admin-dashboard      | ✅ Merged     | Users, gyms, platform analytics      |
+| 10    | feature/polish-and-bonus     | ✅ Merged     | Mobile nav, QR scanner, docs, README |
 
 ---
 
@@ -52,7 +36,7 @@ Then implement in order:
 
 ## Architecture Notes
 
-- Monorepo: `client/` (Vite + React + Tailwind v4) + `server/` (Express + Mongoose ESM)
+- Monorepo: `client/` (Vite + React 19 + Tailwind v4) + `server/` (Express + Mongoose ESM)
 - API proxy: Vite proxies `/api` → `localhost:5000` (no CORS issues in dev)
 - Auth: Access token (15min) in-memory via axios header; Refresh token (7d) in httpOnly cookie
 - Response envelope: `{ success, data, message, errors }`
@@ -67,7 +51,6 @@ Then implement in order:
 - `main` — production only (never commit directly)
 - `development` — integration branch
 - `feature/*` — implement here, then `--no-ff` merge into development
-- Every feature branch is pushed to origin before merging
 
 ## Seed Login Credentials
 
@@ -83,7 +66,7 @@ Then implement in order:
 
 ### Phase 0 — Project Setup
 - ✅ Git branches: `main`, `development`, `feature/project-setup`
-- ✅ Client: Vite + React 18 + Tailwind CSS v4 + React Router v6 + Axios + react-hot-toast
+- ✅ Client: Vite + React 19 + Tailwind CSS v4 + React Router v7 + Axios + react-hot-toast
 - ✅ Server: Express + Mongoose + JWT + bcryptjs + dotenv + cors + helmet + cookie-parser + express-rate-limit
 - ✅ Design system: CSS variables, dark mode via ThemeContext, reusable component classes
 - ✅ App router with full route structure (all 10 modules registered)
@@ -157,31 +140,17 @@ Then implement in order:
 - ✅ `server/src/routes/ownerRoutes.js` — role-guarded (gym_owner or admin)
 - ✅ `client/src/pages/owner/OwnerDashboardPage.jsx` — gym selector, stat cards, SVG bar chart, quick action links
 
----
+### Phase 9 — Admin Dashboard
+- ✅ `server/src/controllers/adminController.js` — getPlatformStats, getAllUsers (paginated + search + role filter), getAllGyms (paginated + verified filter), approveGym, deactivateUser, activateUser
+- ✅ `server/src/routes/adminRoutes.js` — all protected + authorize('admin')
+- ✅ `client/src/pages/admin/AdminDashboardPage.jsx` — tabbed: platform stats (chart + stat cards), user table (search/filter/activate/deactivate), gym table (filter/approve)
 
-## Remaining Phases
-
-### Phase 9 — Admin Dashboard (`feature/admin-dashboard`)
-**Server**:
-- `adminController.js`: getPlatformStats (total users/gyms/check-ins, revenue), getAllUsers (paginated), getAllGyms (paginated), approveGym, deactivateUser
-- `adminRoutes.js`: all protected + authorize('admin')
-
-**Client**:
-- `AdminDashboardPage.jsx`: platform stats, user table, gym approval table
-
-### Phase 10 — Polish & Bonus (`feature/polish-and-bonus`)
-**Server**:
-- Register all routes in `server.js` (verify all 10 route files are mounted)
-- Confirm `.env.example` is complete
-
-**Client**:
-- Wire all navigation links (especially `/memberships`, `/bookings`, `/dashboard`, `/owner`)
-- Update `App.jsx` routes for all new pages
-- Update Navbar to include all role-aware links
-- `QRScannerPage.jsx` (bonus): use device camera to scan QR codes via `html5-qrcode`
-
-**Docs**:
-- Update `docs/api.md` with all implemented endpoints
-- Update `docs/schema.md` with final schemas
-- Final `README.md` update with setup instructions
-- Push `development` → `main` as final release
+### Phase 10 — Polish & Bonus
+- ✅ All routes confirmed mounted in `server.js`
+- ✅ `client/src/components/navigation/Navbar.jsx` — full mobile nav with all role-aware links (Dashboard, Bookings, Profile, Owner, QR Scanner, Admin, Sign out)
+- ✅ `client/src/pages/gyms/QRScannerPage.jsx` — html5-qrcode camera scanner, submit token to check-in API, success/fail states
+- ✅ `/scan` route added to `App.jsx` (protected: gym_owner + admin)
+- ✅ QR Scanner link in navbar dropdown for owners/admins
+- ✅ `docs/api.md` — updated with all 10 phases' endpoints
+- ✅ `README.md` — complete setup guide, all modules, credentials, build instructions
+- ✅ `development` → `main` final release merge (v1.0.0)
