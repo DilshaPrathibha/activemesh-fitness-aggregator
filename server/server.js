@@ -28,8 +28,23 @@ connectDB();
 
 // Core middleware
 app.use(helmet());
+// Allowed CORS origins: CLIENT_URL from env + localhost for dev + *.vercel.app previews
+const ALLOWED_ORIGINS = [
+  process.env.CLIENT_URL,
+  'http://localhost:5173',
+  'http://localhost:4173', // vite preview
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (curl, Postman, mobile apps)
+    if (!origin) return callback(null, true);
+    // Allow any *.vercel.app subdomain (covers preview deploys)
+    if (origin.endsWith('.vercel.app') || ALLOWED_ORIGINS.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error(`CORS: origin '${origin}' not allowed`));
+  },
   credentials: true,
 }));
 app.use(morgan('dev'));
