@@ -18,3 +18,27 @@ export const getGymClasses = async (req, res, next) => {
     next(error);
   }
 };
+
+// GET /api/classes/:id — used by the booking confirmation banner
+export const getClassById = async (req, res, next) => {
+  try {
+    const cls = await Class.findById(req.params.id)
+      .populate('gym', 'name suburb city')
+      .lean();
+
+    if (!cls || !cls.isActive) {
+      return res.status(404).json({ success: false, message: 'Class not found' });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ...cls,
+        availableSlots: cls.capacity - (cls.enrolled?.length || 0),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
